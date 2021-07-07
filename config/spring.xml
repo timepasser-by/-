@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.springframework.org/schema/context
+http://www.springframework.org/schema/context/spring-context.xsd
+               http://www.springframework.org/schema/tx
+http://www.springframework.org/schema/tx/spring-tx.xsd
+">
+    <!-- 扫描包 -->
+    <context:component-scan base-package="com.kkb.*">
+    </context:component-scan>
+    <!-- spring 整合mybatis部分 -->
+    <context:property-placeholder location="classpath*:jdbc.properties"/>
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <!--可以根据url自动检查出驱动-->
+        <property name="driverClassName" value="${jdbc.driver}"></property>
+        <property name="url" value="${jdbc.url}"></property>
+        <property name="username" value="${jdbc.username}"></property>
+        <property name="password" value="${jdbc.password}"></property>
+    </bean>
+    <bean id="sqlSessionFactory"
+          class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 如果有的话，在这里加载mybatis的配置文件-->
+        <property name="configLocation" value="classpath:mybatis.xml">
+        </property>
+        <property name="dataSource" ref="dataSource"></property>
+        <!-- 配置类型别名 -->
+        <property name="typeAliasesPackage" value="com.kkb.pojo"></property>
+        <!-- 映射文件扫描 -->
+        <property name="mapperLocations" value="classpath:com/kkb/mapper/*.xml">
+        </property>
+        <!-- 插件 -->
+        <property name="plugins">
+            <array>
+                <bean class="com.github.pagehelper.PageInterceptor">
+                    <property name="properties">
+                        <value>
+                            reasonable=true
+                        </value>
+                    </property>
+                </bean>
+            </array>
+        </property>
+    </bean>
+    <!-- 映射mybatis的目录 -->
+    <!--Mapper接口所在的包名 spring自动查询指定 包下的mapper
+    有了MapperScannerConfigurer就不需要我们去为每个映射接口去声明一个bean了。大大缩减了开发
+    的效率。-->
+    <bean id="mapperScannerConfigurer"
+          class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+        <property name="basePackage" value="com.kkb.mapper"></property>
+    </bean>
+    <!-- 通过注解方式实现事务 -->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+    <bean id="transactionManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+</beans>
