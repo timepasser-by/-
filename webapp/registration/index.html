@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>门诊查询--中软高科-2015</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="../Css/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="../Css/bootstrap-responsive.css" />
+    <link rel="stylesheet" type="text/css" href="../Css/style.css" />
+    <script type="text/javascript" src="../Js/jquery-1.11.1.js"></script>
+<!--    <script type="text/javascript" src="../Js/jquery.sorted.js"></script>-->
+    <script type="text/javascript" src="../Js/bootstrap.js"></script>
+    <script type="text/javascript" src="../Js/ckform.js"></script>
+    <script type="text/javascript" src="../Js/common.js"></script>
+
+    <style type="text/css">
+        body {
+            padding-bottom: 40px;
+        }
+        .sidebar-nav {
+            padding: 9px 0;
+        }
+
+        @media (max-width: 980px) {
+            /* Enable use of floated navbar text */
+            .navbar-text.pull-right {
+                float: none;
+                padding-left: 5px;
+                padding-right: 5px;
+            }
+        }
+
+
+    </style>
+    <script type="text/javascript">
+	 $(function () {
+		$('#newNav').click(function(){
+				window.location.href="add.html";
+		 });
+         $('#search').click(function(){
+             loadData();
+         });
+         $("#clear").click(function(){
+            $("input[name='hosR_id']").val("");
+             $("input[name='d_name']").val("");
+             $("input[name='d_keshi']").val("");
+             $("input[name='hosR_dateStart']").val("");
+             $("input[name='hosR_dateEnd']").val("");
+         });
+
+    });
+     //页面加载完毕之后发送异步请求
+     $(function(){
+       loadData();
+
+         // $"ul[class='pagination']>li").click(function(){
+         //     if(($(this).attr("class"))=='disabled')
+         //         return;
+         //     let num=$(this).attr("name");
+         //     $("input[name='pageNum']").val(num);
+         //     loadData();
+         // });
+     });
+
+    	function checkall(){
+			var alls=document.getElementsByName("check");
+			var ch=document.getElementById("checkall");
+			if(ch.checked){
+				for(var i=0;i<alls.length;i++){
+					alls[i].checked=true;	
+				}	
+			}else{
+				for(var i=0;i<alls.length;i++){
+					alls[i].checked=false;	
+				}	
+			}
+		}
+		function delAll(){
+			var alls=document.getElementsByName("check");
+			var ids=new Array();
+			for(var i=0;i<alls.length;i++){
+				if(alls[i].checked){
+					ids.push(alls[i].value);
+				}		
+			}
+			if(ids.length>0){
+				if(confirm("确认操作?")){
+					alert("成功!");
+				}
+			}else{
+				alert("请选中要操作的项");
+			}
+		}
+     //填充分页信息
+     var firstPages = 1,prePages = 1,nextPages = 1,lastPages = 1;
+     function fillPageData(pageInfo) {
+         //填充信息
+         $("#total").html(pageInfo.total);
+         $("#pages").html(pageInfo.pages);
+         $("#pageNum").html(pageInfo.pageNum);
+         $("#pageNumber").val(pageInfo.pageNum);
+        // $("select[name='pageSize']").val(pageInfo.pageSize);
+         //设置按钮的属性值和样式
+         firstPages = 1;
+         prePages = pageInfo.prePage;
+         nextPages = pageInfo.nextPage;
+         lastPages = pageInfo.pages;
+         $("#firstPage").attr("name",1);
+         $("#firstPage").removeClass("disabled");
+         $("#prePage").removeClass("disabled");
+         $("#nextPage").removeClass("disabled");
+         $("#lastPage").removeClass("disabled");
+         if(pageInfo.isFirstPage){//如果是第一页：上一页和首页禁用
+             $("#firstPage").addClass("disabled");
+             $("#prePage").addClass("disabled");
+         }
+         if(pageInfo.isLastPage){//如果已经是最后一页：下一页和末页禁用
+             $("#nextPage").addClass("disabled");
+             $("#lastPage").addClass("disabled");
+         }
+         var n =pageInfo.pages;
+         var str = "";
+         for(var i = 1; i <= n; i++){
+                str += "<a onclick='turnToPage("+i+")'>"+i+"</a>"
+         }
+         $("#index").html(str);
+     }
+
+
+     //加载数据
+     function loadData(){
+         // let url = document.location.toString();
+         // alert(url);
+         // let pageNum=url.GetValue("pageNum");
+         // let pageSize=url.GetValue("pageSize");
+         // if(pageNum!=null&&$("#pageNum").val()!=null){
+         //     $("#pageNum").val(pageNum);
+         // }else{
+         //     $("#pageNum").val(1);
+         // }
+         // if(pageSize!=null&&$("#pageNum").val()!=null){
+         //     $("#pageSize").val(pageSize);
+         // }else{
+         //     $("#pageSize").val(5);
+         // }
+         // let pageNum = 1;
+         // let pageSize = 5;
+         // alert("pageSize:"+$("#pageSize").val());
+         // alert("#pageNum:"+$("#pageNum").val());
+         $.ajax({
+             type: "GET",
+             url: "/hosregister/list.do",
+             data: $("#myForm").serialize(),//主要是分页和多条件参数数据
+             dataType:"json",
+             success: function(vo){
+                 let list =vo.pageInfo.list;
+                 let str="";
+                 for(let i=0;i<list.length;i++) {
+                     let obj = list[i];
+                     let hosR_id = obj.hosR_id == null ? '' : obj.hosR_id;
+                     //!!!!!!!!!
+                     let d_name = obj.doctor == null? '' : obj.doctor.d_name;
+                     let hosR_date;
+                     if( obj.hosR_date == null){
+                         hosR_date = '';
+                     }else{
+                     var time = new Date(obj.hosR_date);
+                     var ymdhis = "";
+                     ymdhis += time.getUTCFullYear() + "-";
+                     ymdhis += (time.getUTCMonth()+1) + "-";
+                     ymdhis += time.getUTCDate();
+                     hosR_date = ymdhis;
+                     }
+                    //alert("date:"+hosR_date);
+                     //!!!!!!!!!!!!!!
+                     let d_keshi = obj.doctor==null ? '' : obj.doctor.d_keshi;
+                     let hosR_state = obj.hosR_state == 0 ? '已挂号' : (obj.hosR_state == 1 ? '已住院' : (obj.hosR_state == 2 ? '已出院' : '已退号'));
+                     let btnStr = "";
+                     //!!!!!!!!!!
+                     if (obj.hosR_state == 0) {
+                         btnStr = '<a  onclick="detail('+hosR_id+')">详情>>>></a>&nbsp;&nbsp;&nbsp;<a onclick="modify('+hosR_id+')">更改</a>&nbsp;&nbsp;&nbsp;<a onclick="deleted('+hosR_id+')">退号</a>';
+                     } else if (obj.hosR_state == 1) {
+                         btnStr = '<a onclick="detail('+hosR_id+')">详情>>></a>&nbsp;&nbsp;&nbsp;<a onclick="modify('+hosR_id+')">更改</a>';
+                     } else {
+                         btnStr = '<a onclick="detail('+hosR_id+')">详情>>></a>';
+                     }
+                     str += '<tr>' +
+                         '             <td style="vertical-align:middle;"><input type="checkbox" name="check" value="1"></td>' +
+                         '            <td style="vertical-align:middle;">' + hosR_id + '</td>' +
+                         '            <td style="vertical-align:middle;">' + d_name + '</td>' +
+                         '            <td style="vertical-align:middle;">' + hosR_date + '</td>' +
+                         '            <td style="vertical-align:middle;">' + d_keshi + '</td>' +
+                         '            <td style="vertical-align:middle;">' + hosR_state + '</td>' +
+                         '            <td style="vertical-align:middle;">' + btnStr + '</td>' +
+                         '</tr>';
+                 }
+                 //alert("str:"+str)
+                 $("#tboby").html(str);
+                 //填充分页数据
+                 fillPageData(vo.pageInfo);
+             }
+         })};
+    	//点击第一页
+    	function firstPage(){
+            var size = firstPages;
+            turnToPage(size);
+    	}
+    	//点击最后一页
+     function lastPage(){
+         var size =lastPages;
+         turnToPage(size);
+     }
+     //点击上一页
+     function prePage(){
+         var size =prePages;
+         turnToPage(size);
+     }
+     //点击下一页
+     function nextPage(){
+         var size = nextPages;
+         turnToPage(size);
+     }
+     //跳转到指定index页
+     function turnToPage(index) {
+    	    var s = document.getElementById("pageNumber");
+       s.setAttribute("value",index);
+       var val = s.getAttribute("value");
+         loadData();
+     }
+     function detail(id){
+    	    let pageNum = $("input[name='pageNumber']").val();
+    	    let pageSize = $("input[name = 'pageSize']").val();
+    	    window.location.href = "/registration/look.html?hosR_id="+id+"&pageNumber="+pageNum+"&pageSize="+pageSize;
+     }
+     function modify(id){
+         let pageNum = $("input[name='pageNumber']").val();
+         let pageSize = $("input[name = 'pageSize']").val();
+         window.location.href = "/registration/edit.html?hosR_id="+id+"&pageNumber="+pageNum+"&pageSize="+pageSize;
+     }
+     function deleted(id){
+         var s = id.toString()
+         if(confirm("确定要删除吗?")) {
+             //发起异步请求
+             document.getElementById("hosR_id").setAttribute("value",id)
+             $.ajax({
+                 type: "POST",
+                 url: "/hosregister/deleteHosregister.do?hosR_id="+s, //RESTful风格的API定义
+                 data: "_method=DELETE",
+                 success: function (vo) {
+                     if(vo.code==200){
+                         loadData();
+                     }else{
+                         alert("删除失败！"+vo.msg);
+                     }
+                 }
+             });
+     }}
+    </script>
+
+
+</head>
+<body>
+
+<form id="myForm" action="index.html" method="post" class="definewidth m20">
+<table class="table table-bordered table-hover definewidth m10">
+    <tr>
+        <td width="10%" class="tableleft">病历号：</td>
+        <td><input type="text" name="hosR_id" value=""/></td>
+		
+        <td width="10%" class="tableleft">主治医生：</td>
+        <td><input type="text" name="d_name" value=""/></td>
+		
+        <td width="10%" class="tableleft">科室：</td>
+        <td><input type="text" name="d_keshi" value=""/></td>
+    </tr>
+    <tr>
+
+        <td width="10%" class="tableleft">挂号时间：</td>
+		
+		  <td colspan="5">
+			<input type="text" name="hosR_dateStart" value=""/>&nbsp;至&nbsp;<input type="text" name="hosR_dateEnd" value=""/>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <button  class="btn btn-primary" type="button" id="search">查询</button>
+            <button  class="btn btn-primary" type="button" id="clear">清空</button>
+
+        </td>
+    </tr>
+</table>
+
+   
+<table class="table table-bordered table-hover definewidth m10" >
+   <thead>
+    <tr>
+    	<th><input type="checkbox" id="checkall" onChange="checkall();"></th>
+        <th>门诊编号</th>
+        <th>主治医生</th>
+        <th>挂号时间</th>
+        <th>挂号科室</th>
+        <th>状态</th>
+        <th>操作</th>
+    </tr>
+    </thead>
+    <tbody id="tboby">
+<!--	     <tr >-->
+<!--         	<td style="vertical-align:middle;"><input type="checkbox" name="check" value="1"></td>-->
+<!--            <td style="vertical-align:middle;">1103</td>-->
+<!--            <td style="vertical-align:middle;">程俊</td>-->
+<!--            <td style="vertical-align:middle;">2015-09-09 12：12：12</td>-->
+<!--            <td style="vertical-align:middle;">血液科</td>-->
+<!--            <td style="vertical-align:middle;">已挂号</td>-->
+<!--            <td style="vertical-align:middle;"><a href="look.html">详情>>></a>&nbsp;&nbsp;&nbsp;<a href="edit.html">更改</a>&nbsp;&nbsp;&nbsp;<a href="javascript:alert('退号成功！');">退号</a></td>-->
+<!--        </tr>-->
+<!--	     <tr >-->
+<!--         	<td style="vertical-align:middle;"><input type="checkbox" name="check" value="1"></td>-->
+<!--            <td style="vertical-align:middle;">1104</td>-->
+<!--            <td style="vertical-align:middle;">王博</td>-->
+<!--            <td style="vertical-align:middle;">2015-12-09 12：12：12</td>-->
+<!--            <td style="vertical-align:middle;">骨科</td>-->
+<!--            <td style="vertical-align:middle;">已住院</td>-->
+<!--            <td style="vertical-align:middle;"><a href="look.html">详情>>></a>&nbsp;&nbsp;&nbsp;<a href="edit.html">更改</a></td>-->
+<!--        </tr>-->
+<!--	     <tr >-->
+<!--         	<td style="vertical-align:middle;"><input type="checkbox" name="check" value="1"></td>-->
+<!--            <td style="vertical-align:middle;">1105</td>-->
+<!--            <td style="vertical-align:middle;">沈青川</td>-->
+<!--            <td style="vertical-align:middle;">2015-02-04 15：11：12</td>-->
+<!--            <td style="vertical-align:middle;">外科</td>-->
+<!--            <td style="vertical-align:middle;">已住院</td>-->
+<!--            <td style="vertical-align:middle;"><a href="look.html">详情>>></a>&nbsp;&nbsp;&nbsp;<a href="edit.html">更改</a></td>-->
+<!--        </tr>-->
+<!--	     <tr >-->
+<!--         	<td style="vertical-align:middle;"><input type="checkbox" name="check" value="1"></td>-->
+<!--            <td style="vertical-align:middle;">1106</td>-->
+<!--            <td style="vertical-align:middle;">欧阳雨露</td>-->
+<!--            <td style="vertical-align:middle;">2014-09-05 12：12：12</td>-->
+<!--            <td style="vertical-align:middle;">急诊科</td>-->
+<!--            <td style="vertical-align:middle;">已出院</td>-->
+<!--             <td style="vertical-align:middle;"><a href="look.html">详情>>></a></td>-->
+<!--        </tr>-->
+<!--	     <tr >-->
+<!--         	<td style="vertical-align:middle;"><input type="checkbox" name="check" value="1"></td>-->
+<!--            <td style="vertical-align:middle;">1107</td>-->
+<!--            <td style="vertical-align:middle;">艾小天</td>-->
+<!--            <td style="vertical-align:middle;">2014-02-09 12：12：11</td>-->
+<!--            <td style="vertical-align:middle;">妇科</td>-->
+<!--            <td style="vertical-align:middle;">已退号</td>-->
+<!--             <td style="vertical-align:middle;"><a href="look.html">详情>>></a></td>-->
+<!--        </tr>-->
+    </tbody>
+  </table>
+  
+  <table class="table table-bordered table-hover definewidth m10" >
+  	<tr><th colspan="5">  <div class="inline pull-right page">
+        <a onclick="firstPage()" id="firstPage">第一页</a>
+        <a onclick="prePage()" id="prePage">上一页</a>
+
+        <span class='current' id="index"><a href="#">1</a></span>
+         <a onclick="nextPage()" id="nextPage" >下一页</a>
+        <a onclick="lastPage()" id="lastPage">最后一页</a>
+        &nbsp;&nbsp;&nbsp;共<span class='current' id="total"></span>条记录
+        <span class='current' id = 'pageNum' ></span>&nbsp;&nbsp;/
+        <span class='current'id = 'pages' ></span>页
+        <input type = "hidden" id = "pageSize" name="pageSize" value="5"/>
+        <input type = "hidden" id = "pageNumber" name ="pageNumber" value="1"/>
+        <input type = "hidden" id = "hosR_id" name ="hosR_id" value="1"/>
+		  </div>
+		 <div><button type="button" class="btn btn-success" id="newNav">门诊挂号</button>&nbsp;&nbsp;&nbsp;
+		 <button type="button" class="btn btn-success" id="delPro" onClick="delAll();">退号</button>&nbsp;&nbsp;&nbsp;
+		 <button type="button" class="btn btn-success" id="delPro2">导出Excel</button>
+
+		 
+		 </div>
+		 
+		 </th></tr>
+  </table>
+</form>
+</body>
+</html>
