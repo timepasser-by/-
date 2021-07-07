@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kkb.mapper.LoginuserMapper">
+  <resultMap id="BaseResultMap" type="com.kkb.pojo.Loginuser">
+    <id column="u_loginName" jdbcType="VARCHAR" property="u_loginName" />
+    <result column="u_passWord" jdbcType="VARCHAR" property="u_passWord" />
+    <result column="u_trueName" jdbcType="VARCHAR" property="u_trueName" />
+    <result column="u_email" jdbcType="VARCHAR" property="u_email" />
+    <result column="u_state" jdbcType="INTEGER" property="u_state" />
+    <result column="r_id" jdbcType="INTEGER" property="r_id" />
+  </resultMap>
+
+
+  <sql id="Base_Column_List">
+    u_loginName, u_passWord, u_trueName, u_email, u_state, r_id
+  </sql>
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultType="com.kkb.pojo.Loginuser">
+    select
+    <include refid="Base_Column_List" />
+    from loginUser
+    where u_loginName = #{u_loginName,jdbcType=VARCHAR}
+  </select>
+
+</mapper>
